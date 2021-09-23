@@ -250,7 +250,7 @@
  *
  * Some of possible use cases:
  * - an "open file" dialog to choose files from a remote location,
- * - a recursive media finder providing a player with an ability to play all
+ * - a recursive media finder providing a player with an ability to base_func all
  * files from a given directory.
  *
  * @subsection lavf_io_dirlist_open Opening a directory

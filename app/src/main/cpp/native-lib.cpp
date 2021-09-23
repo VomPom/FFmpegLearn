@@ -42,7 +42,7 @@ jstring test_getinfo(JNIEnv *env) {
 
 JNIEXPORT jstring JNICALL
 Java_julis_wang_ffmpeglearn_MainActivity_test(JNIEnv *env, jobject  /* this */) {
-    simple_player::play();
+    simple_player::base_func();
     return env->NewStringUTF("test return");
 }
 }

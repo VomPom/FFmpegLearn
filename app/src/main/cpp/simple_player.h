@@ -7,7 +7,7 @@
 
 class simple_player {
 public:
-    static int play();
+    static int base_func();
 };
 
 

@@ -97,6 +97,8 @@ add_library( # Sets the name of the library.
 
         # Provides a relative path to your source file(s).
         native-lib.cpp
+        utils.cpp
+        simple_player.cpp
 )
 
 # 指定编译目标库时，cmake要链接的库

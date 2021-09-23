@@ -13,7 +13,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         System.loadLibrary("native-lib");
         TextView textView = findViewById(R.id.tv_test);
-        textView.setText(test());
+        findViewById(R.id.btn_click).setOnClickListener(v -> test());
     }
 
     public native String test();

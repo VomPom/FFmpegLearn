@@ -7,7 +7,9 @@
 
 class simple_player {
 public:
-    static int base_func();
+    static int extract_av_frame();
+
+    static int yuv_to_jpeg();
 };
 
 

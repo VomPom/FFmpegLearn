@@ -12,9 +12,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         System.loadLibrary("native-lib");
-        TextView textView = findViewById(R.id.tv_test);
-        findViewById(R.id.btn_click).setOnClickListener(v -> test());
+        findViewById(R.id.btn_extract).setOnClickListener(v -> simple_extract_frame());
+        findViewById(R.id.btn_yuv_to_jpeg).setOnClickListener(v -> yuv_to_jpeg());
+
     }
 
-    public native String test();
+    public native String simple_extract_frame();
+
+    public native void yuv_to_jpeg();
 }

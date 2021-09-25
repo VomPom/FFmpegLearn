@@ -41,8 +41,14 @@ jstring test_getinfo(JNIEnv *env) {
 }
 
 JNIEXPORT jstring JNICALL
-Java_julis_wang_ffmpeglearn_MainActivity_test(JNIEnv *env, jobject  /* this */) {
-    simple_player::base_func();
+Java_julis_wang_ffmpeglearn_MainActivity_simple_1extract_1frame__(JNIEnv *env, jobject  /* this */) {
+    simple_player::extract_av_frame();
     return env->NewStringUTF("test return");
 }
+
+
+}extern "C"
+JNIEXPORT void JNICALL
+Java_julis_wang_ffmpeglearn_MainActivity_yuv_1to_1jpeg(JNIEnv *env, jobject thiz) {
+    simple_player::yuv_to_jpeg();
 }

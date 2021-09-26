@@ -51,4 +51,8 @@ Java_julis_wang_ffmpeglearn_MainActivity_simple_1extract_1frame__(JNIEnv *env, j
 JNIEXPORT void JNICALL
 Java_julis_wang_ffmpeglearn_MainActivity_yuv_1to_1jpeg(JNIEnv *env, jobject thiz) {
     simple_player::yuv_to_jpeg();
+}extern "C"
+JNIEXPORT void JNICALL
+Java_julis_wang_ffmpeglearn_MainActivity_yuv_1to_1h264(JNIEnv *env, jobject thiz) {
+    simple_player::yuv_to_h264();
 }

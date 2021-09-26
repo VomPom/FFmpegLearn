@@ -10,6 +10,8 @@ public:
     static int extract_av_frame();
 
     static int yuv_to_jpeg();
+
+    static int yuv_to_h264();
 };
 
 

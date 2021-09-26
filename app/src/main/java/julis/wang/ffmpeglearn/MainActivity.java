@@ -3,7 +3,6 @@ package julis.wang.ffmpeglearn;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
-import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -17,7 +16,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_yuv_to_h264).setOnClickListener(v -> yuv_to_h264());
     }
 
-    public native String simple_extract_frame();
+    public native void simple_extract_frame();
 
     public native void yuv_to_jpeg();
 

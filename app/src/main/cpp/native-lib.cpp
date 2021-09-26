@@ -6,53 +6,50 @@
 #include <unistd.h>
 #include "utils.h"
 
+#include "yuv_to_h264.h"
+#include "yuv_to_jpeg.h"
+#include "extract_av_frame.h"
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavfilter/avfilter.h>
 #include <libavcodec/jni.h>
-#include "simple_player.h"
 
-jstring test_getinfo(JNIEnv *env) {
-    char info[40000] = {0};
-    AVCodec *c_temp = av_codec_next(NULL);
-    while (c_temp != NULL) {
-        if (c_temp->decode != NULL) {
-            sprintf(info, "%sdecode:", info);
-        } else {
-            sprintf(info, "%sencode:", info);
-        }
-        switch (c_temp->type) {
-            case AVMEDIA_TYPE_VIDEO:
-                sprintf(info, "%s(video):", info);
-                break;
-            case AVMEDIA_TYPE_AUDIO:
-                sprintf(info, "%s(audio):", info);
-                break;
-            default:
-                sprintf(info, "%s(other):", info);
-                break;
-        }
-        sprintf(info, "%s[%s]\n", info, c_temp->name);
-        c_temp = c_temp->next;
+
+void test_extract_av_frame() {
+    extract_av_frame().run();
+}
+void test_yuv_to_h264() {
+    yuv_to_h264().run();
+}
+void test_yuv_to_jpeg() {
+    yuv_to_jpeg().run();
+}
+
+jint RegisterNatives(JNIEnv *env) {
+    jclass clazz = env->FindClass("julis/wang/ffmpeglearn/MainActivity");
+    if (clazz == NULL) {
+        LOGE("con't find class: julis/wang/ffmpeglearn/MainActivity");
+        return JNI_ERR;
     }
-    return env->NewStringUTF(info);
-
+    JNINativeMethod methods_MainActivity[] = {
+            {"simple_extract_frame", "()V", (void *) test_extract_av_frame},
+            {"yuv_to_jpeg",          "()V", (void *) test_yuv_to_jpeg},
+            {"yuv_to_h264",          "()V", (void *) test_yuv_to_h264}
+    };
+    // int len = sizeof(methods_MainActivity) / sizeof(methods_MainActivity[0]);
+    return env->RegisterNatives(clazz, methods_MainActivity,
+                                sizeof(methods_MainActivity) / sizeof(methods_MainActivity[0]));
 }
 
-JNIEXPORT jstring JNICALL
-Java_julis_wang_ffmpeglearn_MainActivity_simple_1extract_1frame__(JNIEnv *env, jobject  /* this */) {
-    simple_player::extract_av_frame();
-    return env->NewStringUTF("test return");
+jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+    JNIEnv *env = nullptr;
+    if (vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
+        return JNI_ERR;
+    }
+    jint result = RegisterNatives(env);
+    LOGD("RegisterNatives result: %d", result);
+    return JNI_VERSION_1_6;
 }
-
-
-}extern "C"
-JNIEXPORT void JNICALL
-Java_julis_wang_ffmpeglearn_MainActivity_yuv_1to_1jpeg(JNIEnv *env, jobject thiz) {
-    simple_player::yuv_to_jpeg();
-}extern "C"
-JNIEXPORT void JNICALL
-Java_julis_wang_ffmpeglearn_MainActivity_yuv_1to_1h264(JNIEnv *env, jobject thiz) {
-    simple_player::yuv_to_h264();
 }

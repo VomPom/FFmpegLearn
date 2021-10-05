@@ -9,6 +9,12 @@
     tools:context=".MainActivity">
 
     <Button
+        android:id="@+id/btn_demuxing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="分离音视频" />
+
+    <Button
         android:id="@+id/btn_extract"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -25,4 +31,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="YUV转H264" />
+
+    <Button
+        android:id="@+id/btn_yuv_to_mp4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="YUV转MP4" />
+
+
 </LinearLayout>

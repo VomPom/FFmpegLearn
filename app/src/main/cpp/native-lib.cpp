@@ -4,41 +4,50 @@
 #include <jni.h>
 #include <string>
 #include <unistd.h>
-#include "utils.h"
+#include "base/log.h"
 
-#include "yuv_to_h264.h"
-#include "yuv_to_jpeg.h"
-#include "extract_av_frame.h"
+#include "func/yuv_to_h264.h"
+#include "func/yuv_to_jpeg.h"
+#include "func/extract_av_frame.h"
+#include "func/yuv_to_video.h"
+#include "func/demuxing_decoding.h"
 
+const char *j_class = "julis/wang/ffmpeglearn/MainActivity";
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavfilter/avfilter.h>
 #include <libavcodec/jni.h>
 
-
-void test_extract_av_frame() {
+void test_extract_av_frame(JNIEnv *env, jobject thiz) {
     extract_av_frame().run();
 }
-void test_yuv_to_h264() {
+void test_yuv_to_h264(JNIEnv *env, jobject thiz) {
     yuv_to_h264().run();
 }
-void test_yuv_to_jpeg() {
+void test_yuv_to_jpeg(JNIEnv *env, jobject thiz) {
     yuv_to_jpeg().run();
+}
+void test_yuv_to_video(JNIEnv *env, jobject thiz) {
+    yuv_to_video().run();
+}
+void test_extract_yuv_pcm(JNIEnv *env, jobject thiz) {
+    demuxing_decoding().run();
 }
 
 jint RegisterNatives(JNIEnv *env) {
-    jclass clazz = env->FindClass("julis/wang/ffmpeglearn/MainActivity");
-    if (clazz == NULL) {
-        LOGE("con't find class: julis/wang/ffmpeglearn/MainActivity");
+    jclass clazz = env->FindClass(j_class);
+    if (clazz == nullptr) {
+        LOGE("caon't find class: %s", j_class);
         return JNI_ERR;
     }
     JNINativeMethod methods_MainActivity[] = {
+            {"demuxing",             "()V", (void *) test_extract_yuv_pcm},
             {"simple_extract_frame", "()V", (void *) test_extract_av_frame},
             {"yuv_to_jpeg",          "()V", (void *) test_yuv_to_jpeg},
-            {"yuv_to_h264",          "()V", (void *) test_yuv_to_h264}
+            {"yuv_to_h264",          "()V", (void *) test_yuv_to_h264},
+            {"yuv_to_video",         "()V", (void *) test_yuv_to_video},
     };
-    // int len = sizeof(methods_MainActivity) / sizeof(methods_MainActivity[0]);
     return env->RegisterNatives(clazz, methods_MainActivity,
                                 sizeof(methods_MainActivity) / sizeof(methods_MainActivity[0]));
 }

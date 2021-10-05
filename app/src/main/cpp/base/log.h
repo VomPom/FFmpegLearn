@@ -2,8 +2,8 @@
 // Created by julis.wang on 2021/9/22.
 //
 
-#ifndef FFMPEGLEARN_UTILS_H
-#define FFMPEGLEARN_UTILS_H
+#ifndef FFMPEGLEARN_LOG_H
+#define FFMPEGLEARN_LOG_H
 #define DEFAULT_TAG "julis"
 
 // Log
@@ -36,4 +36,4 @@
 #define LOGE_IF(cond, fmt, ...) if(cond) { LOGET(fmt, DEFAULT_TAG, ##__VA_ARGS__); }
 
 
-#endif //FFMPEGLEARN_UTILS_H
+#endif //FFMPEGLEARN_LOG_H

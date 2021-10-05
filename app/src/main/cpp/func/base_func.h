@@ -9,7 +9,7 @@
 
 #define __STDC_CONSTANT_MACROS
 
-#include "utils.h"
+#include "../base/log.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -23,7 +23,6 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
 
 class base_func {
 public:

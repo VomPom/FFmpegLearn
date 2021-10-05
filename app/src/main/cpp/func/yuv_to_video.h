@@ -5,12 +5,12 @@
 #ifndef FFMPEGLEARN_YUV_TO_VIDEO_H
 #define FFMPEGLEARN_YUV_TO_VIDEO_H
 
+#include "base_func.h"
 
-
-class yuv_to_video {
-
+class yuv_to_video : base_func {
+public:
+    virtual int run();
 };
-
 
 
 #endif //FFMPEGLEARN_YUV_TO_VIDEO_H

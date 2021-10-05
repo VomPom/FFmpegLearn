@@ -4,8 +4,7 @@
 
 #include "yuv_to_h264.h"
 
-
-int flush_encoder(AVFormatContext *fmt_ctx, unsigned int stream_index) {
+static int flush_encoder(AVFormatContext *fmt_ctx, unsigned int stream_index) {
     int ret;
     int got_frame;
     AVPacket enc_pkt;

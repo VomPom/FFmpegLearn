@@ -88,6 +88,11 @@ find_library( # Sets the name of the path variable.
         # you want CMake to locate.
         log)
 
+set(BASE base)
+set(FUNC func)
+file(GLOB_RECURSE FUNC ${FUNC}/*.cpp)
+file(GLOB_RECURSE BASE ${BASE}/*.cpp)
+
 # 配置目标so库编译信息
 add_library( # Sets the name of the library.
         native-lib
@@ -97,11 +102,8 @@ add_library( # Sets the name of the library.
 
         # Provides a relative path to your source file(s).
         native-lib.cpp
-        utils.cpp
-        base_func.cpp
-        extract_av_frame.cpp
-        yuv_to_h264.cpp
-        yuv_to_jpeg.cpp
+        ${FUNC}
+        ${BASE}
         )
 
 # 指定编译目标库时，cmake要链接的库

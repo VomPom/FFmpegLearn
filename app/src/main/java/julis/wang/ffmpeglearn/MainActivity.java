@@ -1,10 +1,8 @@
 package julis.wang.ffmpeglearn;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -14,11 +12,18 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_extract).setOnClickListener(v -> simple_extract_frame());
         findViewById(R.id.btn_yuv_to_jpeg).setOnClickListener(v -> yuv_to_jpeg());
         findViewById(R.id.btn_yuv_to_h264).setOnClickListener(v -> yuv_to_h264());
+        findViewById(R.id.btn_yuv_to_mp4).setOnClickListener(v -> yuv_to_video());
+        findViewById(R.id.btn_demuxing).setOnClickListener(v -> demuxing());
+
     }
+
+    public native void demuxing();
 
     public native void simple_extract_frame();
 
     public native void yuv_to_jpeg();
 
     public native void yuv_to_h264();
+
+    public native void yuv_to_video();
 }

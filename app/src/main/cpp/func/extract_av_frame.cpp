@@ -33,7 +33,7 @@ int extract_av_frame::run() {
     pFormatCtx = avformat_alloc_context();
 
     //2，打开文件
-    if (avformat_open_input(&pFormatCtx, video_file_path, nullptr, nullptr) != 0) {
+    if (avformat_open_input(&pFormatCtx, mp4_file_path, nullptr, nullptr) != 0) {
         LOGE("Couldn't open input stream.\n");
         return -1;
     }

@@ -164,12 +164,12 @@ static int open_codec_context(int *stream_idx,
 
 //把一个音视频文件分解为原始视频流YUV文件和原始音频流PCM文件
 int demuxing_decoding::run() {
-    src_filename = video_file_path;
+    src_filename = mp4_file_path;
     int ret = 0;
 
     /* open input file, and allocate format context */
     if (avformat_open_input(&fmt_ctx, src_filename, nullptr, nullptr) < 0) {
-        LOGE("Could not open source file %s", video_file_path);
+        LOGE("Could not open source file %s", mp4_file_path);
         exit(1);
     }
 

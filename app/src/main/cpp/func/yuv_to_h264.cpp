@@ -55,7 +55,7 @@ int yuv_to_h264::run() {
     FILE *in_file = fopen(yuv_file_path, "rb");   //Input raw YUV data
     int framenum = 150;                                   //Frames to encode
 
-    const char *out_file = "/storage/emulated/0/yuv_to_h264.h264";
+    const char *out_file = "/storage/emulated/0/test_h264.h264";
 
     //Method1.
     pFormatCtx = avformat_alloc_context();

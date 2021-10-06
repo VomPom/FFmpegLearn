@@ -6,7 +6,6 @@
 #ifndef FFMPEGLEARN_BASE_FUNC_H
 #define FFMPEGLEARN_BASE_FUNC_H
 
-
 #define __STDC_CONSTANT_MACROS
 
 #include "../base/log.h"
@@ -26,8 +25,9 @@ extern "C"
 
 class base_func {
 public:
-    char *video_file_path = "/storage/emulated/0/test.mp4";
+    char *mp4_file_path = "/storage/emulated/0/test_mp4.mp4";
     char *yuv_file_path = "/storage/emulated/0/test_yuv.yuv";
+    char *h264_file_path = "/storage/emulated/0/test_h264.h264";
     int yuv_w = 176, yuv_h = 144;       //YUV's width and height
 public:
     virtual int run() = 0;

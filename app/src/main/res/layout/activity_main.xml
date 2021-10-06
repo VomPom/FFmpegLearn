@@ -10,33 +10,36 @@
 
     <Button
         android:id="@+id/btn_demuxing"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/JWButton"
         android:text="分离音视频" />
 
     <Button
+        android:id="@+id/btn_hw_decode"
+        style="@style/JWButton"
+        android:text="硬件加速解码" />
+
+    <Button
+        android:id="@+id/btn_video_decode"
+        style="@style/JWButton"
+        android:text="H264->PGM" />
+
+    <Button
         android:id="@+id/btn_extract"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="提取帧" />
+        style="@style/JWButton"
+        android:text="提取AVFrame" />
 
     <Button
         android:id="@+id/btn_yuv_to_jpeg"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/JWButton"
         android:text="YUV转JPEG" />
 
     <Button
         android:id="@+id/btn_yuv_to_h264"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/JWButton"
         android:text="YUV转H264" />
 
     <Button
         android:id="@+id/btn_yuv_to_mp4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/JWButton"
         android:text="YUV转MP4" />
-
-
 </LinearLayout>

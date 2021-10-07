@@ -16,7 +16,7 @@ int yuv_to_video::run() {
     uint8_t *picture_buf = nullptr;
     AVFrame *av_frame;
 
-    FILE *in_file = fopen(yuv_file_path, "rb");
+    FILE *in_file = fopen("/storage/emulated/0/filter_yuv.yuv", "rb");
     if (!in_file) {
         LOGE("can not open file!");
         return -1;

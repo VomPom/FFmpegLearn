@@ -16,8 +16,11 @@ public class MainActivity extends BaseActivity {
         findViewById(R.id.btn_demuxing).setOnClickListener(v -> demuxing());
         findViewById(R.id.btn_video_decode).setOnClickListener(v -> video_decode());
         findViewById(R.id.btn_hw_decode).setOnClickListener(v -> hardware_decode());
+        findViewById(R.id.btn_filtering_video).setOnClickListener(v -> filtering_video());
 
     }
+
+    public native void filtering_video();
 
     public native void hardware_decode();
 

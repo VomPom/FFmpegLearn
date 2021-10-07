@@ -13,6 +13,7 @@
 #include "func/demuxing_decoding.h"
 #include "func/decode_video.h"
 #include "func/hw_decode.h"
+#include "func/filtering_video.h"
 
 const char *j_class = "julis/wang/ffmpeglearn/MainActivity";
 extern "C" {
@@ -42,6 +43,9 @@ void test_video_decode(JNIEnv *env, jobject thiz) {
 void test_hardware_decode(JNIEnv *env, jobject thiz) {
     hw_decode().run();
 }
+void test_filtering_video(JNIEnv *env, jobject thiz) {
+    filtering_video().run();
+}
 
 jint RegisterNatives(JNIEnv *env) {
     jclass clazz = env->FindClass(j_class);
@@ -50,7 +54,7 @@ jint RegisterNatives(JNIEnv *env) {
         return JNI_ERR;
     }
     JNINativeMethod methods_MainActivity[] = {
-
+            {"filtering_video",      "()V", (void *) test_filtering_video},
             {"hardware_decode",      "()V", (void *) test_hardware_decode},
             {"video_decode",         "()V", (void *) test_video_decode},
             {"demuxing",             "()V", (void *) test_extract_yuv_pcm},

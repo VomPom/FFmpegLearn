@@ -61,9 +61,13 @@ public class BaseActivity extends AppCompatActivity {
                 "test_h264.h264",
                 "test_mp4.mp4",
                 "test_yuv.yuv",
+                "test_png.png",
         };
-        for (String file : testFile) {
-            copyAsset(assetManager, file, "/storage/emulated/0/" + file);
+        for (String fileStr : testFile) {
+            File file = new File(fileStr);
+            if (!file.exists()) {
+                copyAsset(assetManager, fileStr, "/storage/emulated/0/" + file);
+            }
         }
     }
 

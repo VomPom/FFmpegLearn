@@ -14,11 +14,6 @@
         android:text="分离音视频" />
 
     <Button
-        android:id="@+id/btn_hw_decode"
-        style="@style/JWButton"
-        android:text="硬件加速解码" />
-
-    <Button
         android:id="@+id/btn_video_decode"
         style="@style/JWButton"
         android:text="H264->PGM" />
@@ -42,4 +37,15 @@
         android:id="@+id/btn_yuv_to_mp4"
         style="@style/JWButton"
         android:text="YUV转MP4" />
+
+    <Button
+        android:id="@+id/btn_filtering_video"
+        style="@style/JWButton"
+        android:text="视频滤镜" />
+
+    <Button
+        android:id="@+id/btn_hw_decode"
+        style="@style/JWButton"
+        android:text="硬件加速解码（TODO）" />
+
 </LinearLayout>

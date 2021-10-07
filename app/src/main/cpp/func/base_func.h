@@ -25,9 +25,9 @@ extern "C"
 
 class base_func {
 public:
-    char *mp4_file_path = "/storage/emulated/0/test_mp4.mp4";
-    char *yuv_file_path = "/storage/emulated/0/test_yuv.yuv";
-    char *h264_file_path = "/storage/emulated/0/test_h264.h264";
+    const char *mp4_file_path = "/storage/emulated/0/test_mp4.mp4";
+    const char *yuv_file_path = "/storage/emulated/0/test_yuv.yuv";
+    const char *h264_file_path = "/storage/emulated/0/test_h264.h264";
     int yuv_w = 176, yuv_h = 144;       //YUV's width and height
 public:
     virtual int run() = 0;

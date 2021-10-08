@@ -8,6 +8,14 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/tv_cost_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"
+        android:text="FFmpegLearn"
+        android:textColor="@color/black" />
+
     <Button
         android:id="@+id/btn_demuxing"
         style="@style/JWButton"
@@ -44,8 +52,19 @@
         android:text="视频滤镜" />
 
     <Button
+        android:id="@+id/btn_video_to_jpeg"
+        style="@style/JWButton"
+        android:text="视频转图片" />
+
+    <Button
         android:id="@+id/btn_hw_decode"
         style="@style/JWButton"
         android:text="硬件加速解码（TODO）" />
+
+
+    <Button
+        android:id="@+id/btn_frame_seek"
+        style="@style/JWButton"
+        android:text="FrameSeek（TODO）" />
 
 </LinearLayout>

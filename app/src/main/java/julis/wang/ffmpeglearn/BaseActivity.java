@@ -64,9 +64,10 @@ public class BaseActivity extends AppCompatActivity {
                 "test_png.png",
         };
         for (String fileStr : testFile) {
-            File file = new File(fileStr);
+            String fullPath = "/storage/emulated/0/" + fileStr;
+            File file = new File(fullPath);
             if (!file.exists()) {
-                copyAsset(assetManager, fileStr, "/storage/emulated/0/" + file);
+                copyAsset(assetManager, fileStr, fullPath);
             }
         }
     }

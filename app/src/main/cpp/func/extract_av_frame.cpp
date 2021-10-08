@@ -86,7 +86,8 @@ int extract_av_frame::run() {
     packet = av_packet_alloc();
     // 2）初始化AVFrame，存放解码后的数据
     pFrame = av_frame_alloc();
-
+    int index = 0;
+    char buf[1024];
     while (true) {
         if (av_read_frame(pFormatCtx, packet) >= 0) {
             if (packet->stream_index == video_index) {
@@ -97,6 +98,7 @@ int extract_av_frame::run() {
                 }
                 int result = avcodec_receive_frame(pCodecCtx, pFrame);
                 if (result == 0) { //成功拿到解码数据，可进行自己的操作
+                    LOGE("avcodec_receive_frame pts:%lld", pFrame->pts);
                     if (pFrame->key_frame) {
                         LOGE("--julis got a key frame");
                     }

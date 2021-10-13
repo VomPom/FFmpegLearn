@@ -109,12 +109,6 @@ static int saveJpg(AVFrame *pFrame, char *out_name) {
     return 0;
 }
 
-std::vector<char *> cache_vector;
-
-char *frame_utils::getImage(int index) {
-    return cache_vector[index];
-}
-
 /**
  * 保存yuv数据
  * @param data
@@ -161,8 +155,8 @@ void save_frame(AVFrame *pFrame, int width, int height) {
  * @return
  *
  **/
-int decode_frame(AVFrame *frame, int src_width, int src_height,
-                 AVPixelFormat src_pix_fmt, int dst_width, int dst_height, int index) {
+void decode_frame(AVFrame *frame, int src_width, int src_height,
+                  AVPixelFormat src_pix_fmt, int dst_width, int dst_height, int index) {
     char *decode_data;
     int decode_size;
 
@@ -193,16 +187,14 @@ int decode_frame(AVFrame *frame, int src_width, int src_height,
 
     // 将解码后的数据拷贝到decode_data中
     memcpy(decode_data, dst_frameRGBA->data[0], dst_frame_size * sizeof(char));
-//    save_frame(frame, src_width, src_height);
-    //        save_rgb(dst_frameRGBA->data[0], dst_frame_size);
+    //    save_frame(frame, src_width, src_height);
+    //    save_rgb(dst_frameRGBA->data[0], dst_frame_size);
     // 计算解码后的帧大小
     decode_size = dst_frame_size * sizeof(char);
     LOGE("decode_size:%d", decode_size);
     // 释放相关内容
     av_free(outBuff);
     av_free(dst_frameRGBA);
-//    cache_vector[index] = decode_data;
-    return 1;
 }
 
 
@@ -307,12 +299,10 @@ int frame_utils::fetchFrame(int task_index) {
 
     int64_t pts;
     int64_t start_index, end_index;
-    clock_t start, end;
     char buf[1024];
     start_index = 750 * task_index / 4;
     end_index = 750 * (task_index + 1) / 4;;
     for (int64_t i = start_index; i < end_index; i++) {
-        start = clock();
         pts = i * 1000 * 25 * 2;
 
         int ret = RET_ERROR;
@@ -339,20 +329,14 @@ int frame_utils::fetchFrame(int task_index) {
                     LOGE("Error during decoding:%s", av_err2str(ret));
                     return RET_ERROR;
                 }
-                end = clock();
-//                LOGE("cost per frame:%lf pts:%ld", (double(end - start) / CLOCKS_PER_SEC) * 1000, pFrame->pts);
                 LOGE("save pic frame->pts:%ld index:%d", pFrame->pts, i);
 //                snprintf(buf, sizeof(buf), "%s/Demo-%d.jpg", "/storage/emulated/0/saveBitmaps", i);
 //                saveJpg(pFrame, buf);
                 decode_frame(pFrame, pFrame->width, pFrame->height, AV_PIX_FMT_YUV420P, pFrame->width,
                              pFrame->height, i);
                 break;
-
-
             }
         }
-
-
     }
     return RET_SUCCESS;
 }

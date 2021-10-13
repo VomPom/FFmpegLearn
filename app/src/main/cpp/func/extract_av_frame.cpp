@@ -86,8 +86,6 @@ int extract_av_frame::run() {
     packet = av_packet_alloc();
     // 2）初始化AVFrame，存放解码后的数据
     pFrame = av_frame_alloc();
-    int index = 0;
-    char buf[1024];
     while (true) {
         if (av_read_frame(pFormatCtx, packet) >= 0) {
             if (packet->stream_index == video_index) {

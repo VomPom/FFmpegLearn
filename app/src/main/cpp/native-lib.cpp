@@ -48,11 +48,8 @@ void test_hardware_decode(JNIEnv *env, jobject thiz) {
 void test_filtering_video(JNIEnv *env, jobject thiz) {
     filtering_video().run();
 }
-void test_frame_seek(JNIEnv *env, jobject thiz) {
-    frame_utils::fetchFrame(0);
-}
-void test_fetch_frame(JNIEnv *env, jobject thiz) {
-    frame_utils::fetchFrame(0);
+void test_frame_seek(JNIEnv *env, jobject thiz, jint index) {
+    frame_utils::fetchFrame(index);
 }
 
 void test_video_to_jpeg(JNIEnv *env, jobject thiz) {
@@ -66,16 +63,16 @@ jint RegisterNatives(JNIEnv *env) {
         return JNI_ERR;
     }
     JNINativeMethod methods_MainActivity[] = {
-            {"video_to_jpeg",        "()V", (void *) test_video_to_jpeg},
-            {"frame_seek",           "()V", (void *) test_frame_seek},
-            {"filtering_video",      "()V", (void *) test_filtering_video},
-            {"hardware_decode",      "()V", (void *) test_fetch_frame},
-            {"video_decode",         "()V", (void *) test_video_decode},
-            {"demuxing",             "()V", (void *) test_extract_yuv_pcm},
-            {"simple_extract_frame", "()V", (void *) test_extract_av_frame},
-            {"yuv_to_jpeg",          "()V", (void *) test_yuv_to_jpeg},
-            {"yuv_to_h264",          "()V", (void *) test_yuv_to_h264},
-            {"yuv_to_video",         "()V", (void *) test_yuv_to_video},
+            {"video_to_jpeg",        "()V",  (void *) test_video_to_jpeg},
+            {"frame_seek",           "(I)V", (void *) test_frame_seek},
+            {"filtering_video",      "()V",  (void *) test_filtering_video},
+            {"hardware_decode",      "()V",  (void *) test_hardware_decode},
+            {"video_decode",         "()V",  (void *) test_video_decode},
+            {"demuxing",             "()V",  (void *) test_extract_yuv_pcm},
+            {"simple_extract_frame", "()V",  (void *) test_extract_av_frame},
+            {"yuv_to_jpeg",          "()V",  (void *) test_yuv_to_jpeg},
+            {"yuv_to_h264",          "()V",  (void *) test_yuv_to_h264},
+            {"yuv_to_video",         "()V",  (void *) test_yuv_to_video},
     };
     return env->RegisterNatives(clazz, methods_MainActivity,
                                 sizeof(methods_MainActivity) / sizeof(methods_MainActivity[0]));

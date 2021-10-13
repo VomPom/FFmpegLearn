@@ -57,14 +57,13 @@
         android:text="视频转图片" />
 
     <Button
+        android:id="@+id/btn_frame_seek"
+        style="@style/JWButton"
+        android:text="提取关键帧" />
+
+    <Button
         android:id="@+id/btn_hw_decode"
         style="@style/JWButton"
         android:text="硬件加速解码（TODO）" />
-
-
-    <Button
-        android:id="@+id/btn_frame_seek"
-        style="@style/JWButton"
-        android:text="FrameSeek（TODO）" />
 
 </LinearLayout>

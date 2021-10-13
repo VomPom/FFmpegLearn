@@ -200,7 +200,7 @@ int video_to_jpeg::run() {
 
                 // 9 这里必须用while()，因为一次avcodec_receive_frame可能无法接收到所有数据
                 while (avcodec_receive_frame(codeCtx, frame) == 0) {
-                    if (frame_count % 25 == 0) {
+                    if (frame_count % 25 == 0) { //只要关键帧的图片数据
                         // 拼接图片路径、名称
                         int keyFrameIndex = frame_count / 25;
                         snprintf(buf, sizeof(buf), "%s/Demo-%d.jpg", out_filename, keyFrameIndex);

@@ -17,10 +17,11 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++11 -frtti -fexceptions"
+                arguments "-DANDROID_STL=c++_shared"
             }
         }
         ndk {
-            abiFilters "armeabi-v7a"
+            abiFilters "arm64-v8a"
         }
     }
 //    sourceSets {

@@ -6,6 +6,7 @@
 #define FFMPEGLEARN_FRAME_UTILS_H
 
 #include "base_func.h"
+#include "opencv2/core.hpp"
 
 class frame_utils {
 private:
@@ -27,7 +28,10 @@ public:
      * @param pFormatCtx         格式上下文
      * @return
      */
-    static int fetchFrame(int64_t pts);
+    static int fetchFrame(int task_index);
+
+    static char *getImage(int index);
+
 };
 
 

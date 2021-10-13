@@ -2,8 +2,11 @@ package julis.wang.ffmpeglearn;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+
+import java.io.File;
 
 public class MainActivity extends BaseActivity implements View.OnClickListener {
     private long startTime;
@@ -29,7 +32,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     public native void video_to_jpeg();
 
-    public native void frame_seek();
+    public native void frame_seek(int index);
 
     public native void filtering_video();
 
@@ -69,7 +72,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         } else if (vId == R.id.btn_filtering_video) {
             filtering_video();
         } else if (vId == R.id.btn_frame_seek) {
-            frame_seek();
+            frameSeek();
         } else if (vId == R.id.btn_video_to_jpeg) {
             video_to_jpeg();
         } else {
@@ -78,8 +81,32 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         costTime();
     }
 
+    private void frameSeek() {
+
+        final String saveFramePath = "/storage/emulated/0/saveBitmaps";
+        File file = new File(saveFramePath);
+        if (!file.exists()) {
+            boolean flag = file.mkdirs();
+        }
+        for (int i = 0; i < 1; i++) {
+            int finalI = i;
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    frame_seek(finalI);
+                    costTime();
+                }
+            });
+            if (i == 0) {
+                thread.setPriority(Thread.MAX_PRIORITY);
+            }
+            thread.start();
+        }
+    }
+
     private void costTime() {
         String message = "Cost time:" + (System.currentTimeMillis() - startTime) / 1000.0 + "s";
-        tvCost.setText(message);
+//        tvCost.setText(message);
+        Log.e(TAG, message);
     }
 }

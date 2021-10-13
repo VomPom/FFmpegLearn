@@ -7,11 +7,11 @@
 static const int RET_ERROR = -1;
 static const int RET_SUCCESS = 1;
 
+
 static int saveJpg(AVFrame *pFrame, char *out_name) {
     int width = pFrame->width;
     int height = pFrame->height;
     AVCodecContext *pCodeCtx = nullptr;
-
 
     AVFormatContext *pFormatCtx = avformat_alloc_context();
     // 设置输出文件格式
@@ -109,8 +109,121 @@ static int saveJpg(AVFrame *pFrame, char *out_name) {
     return 0;
 }
 
-int frame_utils::fetchFrame(int64_t pts) {
+std::vector<char *> cache_vector;
 
+char *frame_utils::getImage(int index) {
+    return cache_vector[index];
+}
+
+/**
+ * 保存yuv数据
+ * @param data
+ * @param frameSize
+ * */
+void save_frame(AVFrame *pFrame, int width, int height) {
+
+    FILE *pFile;
+    char *szFilename = "/storage/emulated/0/test_yuv.yuv";
+    int y;
+
+    pFile = fopen(szFilename, "wb");
+
+    if (pFile == NULL)
+        return;
+
+    int y_size = width * height;
+    int u_size = y_size / 4;
+    int v_size = y_size / 4;
+
+    //写入文件
+    //首先写入Y，再是U，再是V
+    //in_frame_picture->data[0]表示Y
+    fwrite(pFrame->data[0], 1, y_size, pFile);
+    //in_frame_picture->data[1]表示U
+    fwrite(pFrame->data[1], 1, u_size, pFile);
+    //in_frame_picture->data[2]表示V
+    fwrite(pFrame->data[2], 1, v_size, pFile);
+
+    // Close file
+    fclose(pFile);
+
+}
+
+/**
+ * 解码AVFrame中的yuv420数据并且转换为rgba数据
+ *
+ * @param frame 需要解码的帧结构
+ * @param src_width 需要转换的帧宽度
+ * @param src_height 需要转换的帧高度
+ * @param src_pix_fmt 需要转换的帧编码方式
+ * @param dst_width 转换后目标的宽度
+ * @param dst_height 转换后目标的高度
+ * @return
+ *
+ **/
+int decode_frame(AVFrame *frame, int src_width, int src_height,
+                 AVPixelFormat src_pix_fmt, int dst_width, int dst_height, int index) {
+    char *decode_data;
+    int decode_size;
+
+    struct SwsContext *pSwsCtx;
+    // 转换后的帧结构对象
+    AVFrame *dst_frameRGBA = av_frame_alloc();
+
+    uint8_t *outBuff;
+    // 初始化目标帧长度
+    int dst_frame_size;
+    // 计算RGBA下的目标长度
+    dst_frame_size = av_image_get_buffer_size(AV_PIX_FMT_RGBA, dst_width, dst_height, 1);
+    // 分配转换后输出的内存空间
+    outBuff = (uint8_t *) av_malloc(dst_frame_size * sizeof(uint8_t));
+
+    av_image_fill_arrays(dst_frameRGBA->data, dst_frameRGBA->linesize, outBuff, AV_PIX_FMT_RGBA, frame->width,
+                         frame->height, 1);
+    // 获取缩放上下文
+    pSwsCtx = sws_getContext(src_width, src_height, src_pix_fmt, dst_width, dst_height, AV_PIX_FMT_RGBA,
+                             SWS_BILINEAR, nullptr, nullptr, nullptr);
+    // 缩放，结果保存在目标帧结构的dst_frameRGBA->data中
+    sws_scale(pSwsCtx, frame->data,
+              frame->linesize, 0, src_height,
+              dst_frameRGBA->data, dst_frameRGBA->linesize);
+    dst_frameRGBA->format = AV_PIX_FMT_RGBA;
+    // 存储帧结果
+    decode_data = (char *) (malloc(dst_frame_size * sizeof(char)));// 测试保存成文件
+
+    // 将解码后的数据拷贝到decode_data中
+    memcpy(decode_data, dst_frameRGBA->data[0], dst_frame_size * sizeof(char));
+//    save_frame(frame, src_width, src_height);
+    //        save_rgb(dst_frameRGBA->data[0], dst_frame_size);
+    // 计算解码后的帧大小
+    decode_size = dst_frame_size * sizeof(char);
+    LOGE("decode_size:%d", decode_size);
+    // 释放相关内容
+    av_free(outBuff);
+    av_free(dst_frameRGBA);
+//    cache_vector[index] = decode_data;
+    return 1;
+}
+
+
+static void savePixel(AVFrame *pFrameRGBA, int index) {
+    SwsContext *swsContext = swsContext = sws_getContext(pFrameRGBA->width, pFrameRGBA->height, AV_PIX_FMT_YUV420P,
+                                                         pFrameRGBA->width, pFrameRGBA->height, AV_PIX_FMT_BGR24,
+                                                         1, nullptr, nullptr, nullptr);
+
+    int linesize[8] = {pFrameRGBA->linesize[0] * 3};
+    int num_bytes = av_image_get_buffer_size(AV_PIX_FMT_BGR24, pFrameRGBA->width, pFrameRGBA->height, 1);
+    auto *p_global_bgr_buffer = (uint8_t *) malloc(num_bytes * sizeof(uint8_t));
+    uint8_t *bgr_buffer[8] = {p_global_bgr_buffer};
+
+    sws_scale(swsContext, pFrameRGBA->data, pFrameRGBA->linesize, 0, pFrameRGBA->height, bgr_buffer, linesize);
+    LOGE("julis bgr_buffer:%p", bgr_buffer);
+    //bgr_buffer[0] is the BGR raw data
+}
+
+
+int frame_utils::fetchFrame(int task_index) {
+//    cache_vector.resize(750);
     AVCodecParameters *pCodeParameter;
     //AVFormatContext 包含码流参数较多的结构体，Format I/O context. 它是FFMPEG解封装（flv，mp4，rmvb，avi）功能的结构体
     AVFormatContext *pFormatCtx;
@@ -191,9 +304,14 @@ int frame_utils::fetchFrame(int64_t pts) {
         LOGE("fetchFrame AVFrame申请失败");
         return RET_ERROR;
     }
+
+    int64_t pts;
+    int64_t start_index, end_index;
     clock_t start, end;
     char buf[1024];
-    for (int64_t i = 0; i < 750; i++) {
+    start_index = 750 * task_index / 4;
+    end_index = 750 * (task_index + 1) / 4;;
+    for (int64_t i = start_index; i < end_index; i++) {
         start = clock();
         pts = i * 1000 * 25 * 2;
 
@@ -222,15 +340,14 @@ int frame_utils::fetchFrame(int64_t pts) {
                     return RET_ERROR;
                 }
                 end = clock();
-                LOGE("cost per frame:%lf pts:%lld", (double(end - start) / CLOCKS_PER_SEC) * 1000, pFrame->pts);
-
-//                if (pFrame->pts >= pts)
-                LOGE("isFind = true; pts:%lld", pFrame->pts);
-                snprintf(buf, sizeof(buf), "%s/Demo-%d.jpg", "/storage/emulated/0/saveBitmaps2", i);
-                LOGE("save map index:%d", i);
-                saveJpg(pFrame, buf);
-
+//                LOGE("cost per frame:%lf pts:%ld", (double(end - start) / CLOCKS_PER_SEC) * 1000, pFrame->pts);
+                LOGE("save pic frame->pts:%ld index:%d", pFrame->pts, i);
+//                snprintf(buf, sizeof(buf), "%s/Demo-%d.jpg", "/storage/emulated/0/saveBitmaps", i);
+//                saveJpg(pFrame, buf);
+                decode_frame(pFrame, pFrame->width, pFrame->height, AV_PIX_FMT_YUV420P, pFrame->width,
+                             pFrame->height, i);
                 break;
+
 
             }
         }

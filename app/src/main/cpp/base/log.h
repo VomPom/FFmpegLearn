@@ -8,7 +8,9 @@
 
 // Log
 #ifdef __ANDROID__
+
 #include <android/log.h>
+
 #define LOGDT(fmt, tag, ...)                                                                                           \
     __android_log_print(ANDROID_LOG_DEBUG, tag, ("%s [File %s][Line %d] " fmt), __PRETTY_FUNCTION__, __FILE__,         \
                         __LINE__, ##__VA_ARGS__);                                                                      \
@@ -18,8 +20,7 @@
                         __LINE__, ##__VA_ARGS__);                                                                      \
     fprintf(stdout, ("I/%s: %s [File %s][Line %d] " fmt), tag, __PRETTY_FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__)
 #define LOGET(fmt, tag, ...)                                                                                           \
-    __android_log_print(ANDROID_LOG_ERROR, tag, ("%s [File %s][Line %d] " fmt), __PRETTY_FUNCTION__, __FILE__,         \
-                        __LINE__, ##__VA_ARGS__);                                                                      \
+    __android_log_print(ANDROID_LOG_ERROR, tag, ("" fmt), ##__VA_ARGS__);                                                                      \
     fprintf(stderr, ("E/%s: %s [File %s][Line %d] " fmt), tag, __PRETTY_FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__)
 #else
 #define LOGDT(fmt, tag, ...)                                                                                           \

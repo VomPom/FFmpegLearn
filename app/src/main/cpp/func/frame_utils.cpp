@@ -6,12 +6,12 @@
 
 static const int RET_ERROR = -1;
 static const int RET_SUCCESS = 1;
-
+using namespace cv;
 
 static int saveJpg(AVFrame *pFrame, char *out_name) {
     int width = pFrame->width;
     int height = pFrame->height;
-    AVCodecContext *pCodeCtx = nullptr;
+    AVCodecContext *pCodeCtx;
 
     AVFormatContext *pFormatCtx = avformat_alloc_context();
     // 设置输出文件格式
@@ -115,15 +115,12 @@ static int saveJpg(AVFrame *pFrame, char *out_name) {
  * @param frameSize
  * */
 void save_frame(AVFrame *pFrame, int width, int height) {
-
     FILE *pFile;
-    char *szFilename = "/storage/emulated/0/test_yuv.yuv";
-    int y;
-
+    const char *szFilename = "/storage/emulated/0/test_yuv.yuv";
     pFile = fopen(szFilename, "wb");
-
-    if (pFile == NULL)
+    if (pFile == nullptr) {
         return;
+    }
 
     int y_size = width * height;
     int u_size = y_size / 4;
@@ -155,92 +152,84 @@ void save_frame(AVFrame *pFrame, int width, int height) {
  * @return
  *
  **/
-void decode_frame(AVFrame *frame, int src_width, int src_height,
-                  AVPixelFormat src_pix_fmt, int dst_width, int dst_height, int index) {
-    char *decode_data;
-    int decode_size;
+static void decode_frame(AVFrame *src_frame, char *out_name) {
+    int src_width = src_frame->width;
+    int src_height = src_frame->height;
+    AVPixelFormat target_pixel_format = AV_PIX_FMT_RGBA;
+    AVPixelFormat src_pixel_format = AV_PIX_FMT_YUV420P;
 
-    struct SwsContext *pSwsCtx;
-    // 转换后的帧结构对象
-    AVFrame *dst_frameRGBA = av_frame_alloc();
+    SwsContext *pSwsCtx;
+    AVFrame *dst_RGBA_frame;
 
-    uint8_t *outBuff;
-    // 初始化目标帧长度
-    int dst_frame_size;
-    // 计算RGBA下的目标长度
-    dst_frame_size = av_image_get_buffer_size(AV_PIX_FMT_RGBA, dst_width, dst_height, 1);
-    // 分配转换后输出的内存空间
-    outBuff = (uint8_t *) av_malloc(dst_frame_size * sizeof(uint8_t));
-
-    av_image_fill_arrays(dst_frameRGBA->data, dst_frameRGBA->linesize, outBuff, AV_PIX_FMT_RGBA, frame->width,
-                         frame->height, 1);
-    // 获取缩放上下文
-    pSwsCtx = sws_getContext(src_width, src_height, src_pix_fmt, dst_width, dst_height, AV_PIX_FMT_RGBA,
+    dst_RGBA_frame = av_frame_alloc();
+    int dst_frame_size = av_image_get_buffer_size(target_pixel_format, src_width, src_height, 1);
+    auto *outBuff = (uint8_t *) av_malloc(dst_frame_size);
+    av_image_fill_arrays(dst_RGBA_frame->data, dst_RGBA_frame->linesize, outBuff, target_pixel_format, src_width,
+                         src_height, 1);
+    pSwsCtx = sws_getContext(src_width, src_height, src_pixel_format, src_width, src_height, target_pixel_format,
                              SWS_BILINEAR, nullptr, nullptr, nullptr);
-    // 缩放，结果保存在目标帧结构的dst_frameRGBA->data中
-    sws_scale(pSwsCtx, frame->data,
-              frame->linesize, 0, src_height,
-              dst_frameRGBA->data, dst_frameRGBA->linesize);
-    dst_frameRGBA->format = AV_PIX_FMT_RGBA;
-    // 存储帧结果
-    decode_data = (char *) (malloc(dst_frame_size * sizeof(char)));// 测试保存成文件
 
-    // 将解码后的数据拷贝到decode_data中
-    memcpy(decode_data, dst_frameRGBA->data[0], dst_frame_size * sizeof(char));
-    //    save_frame(frame, src_width, src_height);
-    //    save_rgb(dst_frameRGBA->data[0], dst_frame_size);
-    // 计算解码后的帧大小
-    decode_size = dst_frame_size * sizeof(char);
-    LOGE("decode_size:%d", decode_size);
+    sws_scale(pSwsCtx, src_frame->data, src_frame->linesize, 0, src_frame->height, dst_RGBA_frame->data,
+              dst_RGBA_frame->linesize);
+
+    Mat image = Mat::zeros(src_height, src_width, CV_8UC4);
+    memcpy(image.data, outBuff, dst_frame_size);
+
+    //   写入图片到本地磁盘
+    cv::imwrite(out_name, image);
+
     // 释放相关内容
+    sws_freeContext(pSwsCtx);
     av_free(outBuff);
-    av_free(dst_frameRGBA);
+    av_frame_unref(dst_RGBA_frame);
 }
 
+std::vector<int64_t> get_key_frame_list(AVFormatContext *formatContext, AVPacket *avPacket, int video_index) {
+    std::vector<int64_t> keyFrames;
+    while (av_read_frame(formatContext, avPacket) >= 0) {
+        if (video_index == avPacket->stream_index) {
+            int ret = av_seek_frame(formatContext, video_index, avPacket->pts + 1, 0);
+            if (ret == 0) {
+                int64_t value = av_rescale_q(avPacket->pts, formatContext->streams[video_index]->time_base,
+                                             AV_TIME_BASE_Q);
+                LOGE("avPacket->pts:%ld pkt_pts_time:%ld", avPacket->pts, value);
+                keyFrames.push_back(value);
+            }
+        }
+        av_packet_unref(avPacket);
+    }
 
-static void savePixel(AVFrame *pFrameRGBA, int index) {
-    SwsContext *swsContext = swsContext = sws_getContext(pFrameRGBA->width, pFrameRGBA->height, AV_PIX_FMT_YUV420P,
-                                                         pFrameRGBA->width, pFrameRGBA->height, AV_PIX_FMT_BGR24,
-                                                         1, nullptr, nullptr, nullptr);
+    return keyFrames;
 
-    int linesize[8] = {pFrameRGBA->linesize[0] * 3};
-    int num_bytes = av_image_get_buffer_size(AV_PIX_FMT_BGR24, pFrameRGBA->width, pFrameRGBA->height, 1);
-    auto *p_global_bgr_buffer = (uint8_t *) malloc(num_bytes * sizeof(uint8_t));
-    uint8_t *bgr_buffer[8] = {p_global_bgr_buffer};
-
-    sws_scale(swsContext, pFrameRGBA->data, pFrameRGBA->linesize, 0, pFrameRGBA->height, bgr_buffer, linesize);
-    LOGE("julis bgr_buffer:%p", bgr_buffer);
-    //bgr_buffer[0] is the BGR raw data
 }
 
+int frame_utils::fetch_frame(int thread_size, int task_index,
+                             int start_ms, int end_ms, int step_ms,
+                             char *video_file_path, char *save_path,
+                             bool accurate_seek) {
 
-int frame_utils::fetchFrame(int task_index) {
-//    cache_vector.resize(750);
+    if (start_ms > end_ms) {
+        LOGE("start time must > end time");
+        return RET_ERROR;
+    }
     AVCodecParameters *pCodeParameter;
-    //AVFormatContext 包含码流参数较多的结构体，Format I/O context. 它是FFMPEG解封装（flv，mp4，rmvb，avi）功能的结构体
     AVFormatContext *pFormatCtx;
-
-    //AVCodecContext main external API structure.
     AVCodecContext *pCodecCtx;
-
-    //AVCodec 是存储编解码器信息的结构体
     AVCodec *pCodec;
-
-    //AVPacket 是存储压缩编码数据相关信息的结构体
 
     //1，初始化上下文
     pFormatCtx = avformat_alloc_context();
 
     //2，打开文件
-    if (avformat_open_input(&pFormatCtx, "/storage/emulated/0/25min.mp4", nullptr, nullptr) != 0) {
+    if (avformat_open_input(&pFormatCtx, video_file_path, nullptr, nullptr) != 0) {
         LOGE("Couldn't open input stream.\n");
-        return -1;
+        return RET_ERROR;
     }
 
     //3，获取音视频流信息
     if (avformat_find_stream_info(pFormatCtx, nullptr) < 0) {
         LOGE("Couldn't find stream information.\n");
-        return -1;
+        return RET_ERROR;
     }
 
     //4，查找编解码器
@@ -252,8 +241,8 @@ int frame_utils::fetchFrame(int task_index) {
             break;
         }
     if (video_index == -1) {
-        printf("Didn't find a video stream.\n");
-        return -1;
+        LOGE("Didn't find a video stream.\n");
+        return RET_ERROR;
     }
     //4.2 获取解码器参数
     pCodeParameter = pFormatCtx->streams[video_index]->codecpar;
@@ -265,11 +254,11 @@ int frame_utils::fetchFrame(int task_index) {
     pCodecCtx = avcodec_alloc_context3(pCodec);
     if (avcodec_parameters_to_context(pCodecCtx, pCodeParameter) < 0) {
         LOGE("Could not avcodec parameters to context.\n");
-        return -1;
+        return RET_ERROR;
     }
     if (pCodec == nullptr) {
         LOGE("Codec not found.\n");
-        return -1;
+        return RET_ERROR;
     } else {
         LOGE("find pCodec:%s", pCodec->name);
     }
@@ -277,66 +266,71 @@ int frame_utils::fetchFrame(int task_index) {
     //5，打开解码器
     if (avcodec_open2(pCodecCtx, pCodec, nullptr) < 0) {
         LOGE("Could not open codec.\n");
-        return -1;
-    }
-    AVFrame *pFrameRGB;
-    pFrameRGB = av_frame_alloc();
-
-    AVPacket *pPacket;
-    pPacket = av_packet_alloc();
-    if (pPacket == nullptr) {
-        LOGE("fetchFrame AVPacket申请失败");
         return RET_ERROR;
     }
+    AVRational time_base = pFormatCtx->streams[video_index]->time_base;
+
+    AVPacket *pPacket = av_packet_alloc();
     av_init_packet(pPacket);
+    AVFrame *pFrame = av_frame_alloc();
+    int ret, save_index;
 
-    AVFrame *pFrame;
-    pFrame = av_frame_alloc();
-    if (pFrame == nullptr) {
-        LOGE("fetchFrame AVFrame申请失败");
-        return RET_ERROR;
-    }
 
-    int64_t pts;
-    int64_t start_index, end_index;
-    char buf[1024];
-    start_index = 750 * task_index / 4;
-    end_index = 750 * (task_index + 1) / 4;;
-    for (int64_t i = start_index; i < end_index; i++) {
-        pts = i * 1000 * 25 * 2;
+    int64_t pts, task_start_index_ms, task_end_index_ms;
+    int64_t per_task_time = (end_ms - start_ms) / thread_size;
+    task_start_index_ms = start_ms + per_task_time * task_index;
+    task_end_index_ms = task_start_index_ms + per_task_time;
 
-        int ret = RET_ERROR;
+    LOGE("task_start_index_ms:%ld task_end_index_ms:%ld", task_start_index_ms, task_end_index_ms);
+    //150004
+    for (int index = task_start_index_ms; index < task_end_index_ms; index += step_ms) {
+        save_index = index / step_ms;
+        LOGE("save_index:%d task_index:%d", save_index, task_index);
+
+        pts = index / av_q2d(time_base) / 1000; //25fps
         //定位到I帧位置
         ret = av_seek_frame(pFormatCtx, video_index, pts, AVSEEK_FLAG_BACKWARD);
         if (ret < 0) {
             LOGE("Error av_seek_frame:%s", av_err2str(ret));
             return RET_ERROR;
         }
-
         while (av_read_frame(pFormatCtx, pPacket) >= 0) {
             if (pPacket->stream_index == video_index) {
+
                 ret = avcodec_send_packet(pCodecCtx, pPacket);
                 if (ret < 0) {
                     LOGE("Error sending a packet for decoding:%s", av_err2str(ret));
+                    av_packet_unref(pPacket);
                     break;
                 }
                 ret = avcodec_receive_frame(pCodecCtx, pFrame);
                 if (ret == AVERROR(EAGAIN)) {
-                    LOGE("ret == AVERROR(EAGAIN)");
+                    LOGE("ret == AVERROR(EAGAIN) index:%d", save_index);
+                    index -= step_ms; //retry.
+                    av_packet_unref(pPacket);
                     break;
+                }
+                if (accurate_seek && pPacket->pts < pts) {
+                    av_packet_unref(pPacket);
+                    continue;
                 }
                 if (ret < 0) {
                     LOGE("Error during decoding:%s", av_err2str(ret));
+                    av_packet_unref(pPacket);
                     return RET_ERROR;
                 }
-                LOGE("save pic frame->pts:%ld index:%d", pFrame->pts, i);
-//                snprintf(buf, sizeof(buf), "%s/Demo-%d.jpg", "/storage/emulated/0/saveBitmaps", i);
-//                saveJpg(pFrame, buf);
-                decode_frame(pFrame, pFrame->width, pFrame->height, AV_PIX_FMT_YUV420P, pFrame->width,
-                             pFrame->height, i);
+                char out_name[1024];
+                LOGE("save :%d", save_index);
+                snprintf(out_name, sizeof(out_name), "%s/fetch-frame-%03d.jpeg", save_path, save_index);
+                decode_frame(pFrame, out_name);
+                av_frame_unref(pFrame);
+                av_packet_unref(pPacket);
                 break;
             }
         }
     }
+
+    avcodec_close(pCodecCtx);
+    avformat_close_input(&pFormatCtx);
     return RET_SUCCESS;
 }

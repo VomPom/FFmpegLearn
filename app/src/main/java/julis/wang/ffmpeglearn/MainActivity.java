@@ -1,7 +1,10 @@
 package julis.wang.ffmpeglearn;
 
 import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
+import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -9,8 +12,10 @@ import android.widget.TextView;
 import java.io.File;
 
 public class MainActivity extends BaseActivity implements View.OnClickListener {
+    public static final String TEST_VIDEO_PATH = "/storage/emulated/0/lolm-25min.mp4"; //lolm-
     private long startTime;
     private TextView tvCost;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,9 +35,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         tvCost = findViewById(R.id.tv_cost_time);
     }
 
-    public native void video_to_jpeg();
+    public native static void frame_seek(int thread_size, int task_index, int startMs, int endMS, int stepMs,
+                                         String videoFileName, String saveFilePath, boolean accurateSeek);
 
-    public native void frame_seek(int index);
+    public native void video_to_jpeg();
 
     public native void filtering_video();
 
@@ -72,7 +78,15 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         } else if (vId == R.id.btn_filtering_video) {
             filtering_video();
         } else if (vId == R.id.btn_frame_seek) {
-            frameSeek();
+            for (int i = 0; i < 4; i++) {
+                int finalI = i;
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        frameSeek(finalI);
+                    }
+                }).start();
+            }
         } else if (vId == R.id.btn_video_to_jpeg) {
             video_to_jpeg();
         } else {
@@ -81,19 +95,24 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         costTime();
     }
 
-    private void frameSeek() {
+    public static final int THREAD_SIZE = 4;
 
-        final String saveFramePath = "/storage/emulated/0/saveBitmaps";
+    private void frameSeek(int index) {
+        int timeLength = videoDuration(TEST_VIDEO_PATH);
+        final String saveFramePath = "/storage/emulated/0/saveJpeg";
         File file = new File(saveFramePath);
         if (!file.exists()) {
             boolean flag = file.mkdirs();
         }
-        for (int i = 0; i < 1; i++) {
+
+        for (int i = 0; i < THREAD_SIZE; i++) {
             int finalI = i;
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    frame_seek(finalI);
+                    Log.e(TAG, "index:" + finalI);
+                    frame_seek(THREAD_SIZE, finalI, 0, 10000 * (index + 1),
+                            500, TEST_VIDEO_PATH, saveFramePath, true);
                     costTime();
                 }
             });
@@ -102,6 +121,18 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             }
             thread.start();
         }
+    }
+
+    public static int videoDuration(String inputFilePath) {
+        int duration = -1;
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(inputFilePath);
+        String durationStr = mmr.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION);
+
+        if (!TextUtils.isEmpty(durationStr)) {
+            duration = Integer.parseInt(durationStr);
+        }
+        return duration;
     }
 
     private void costTime() {

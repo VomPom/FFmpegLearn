@@ -109,58 +109,57 @@ int saveJpg(AVFrame *pFrame, char *out_name) {
 int video_to_jpeg::run() {
     int ret;
     const char *in_filename, *out_filename;
-    AVFormatContext *fmt_ctx = nullptr;
 
     const AVCodec *codec;
-    AVCodecContext *codeCtx = nullptr;
+    AVCodecContext *codeCtx;
 
-    AVStream *stream = nullptr;
-    int stream_index;
+    AVStream *stream;
+    int video_stream_index;
 
     AVPacket avpkt;
 
     int frame_count;
     AVFrame *frame;
 
-
     in_filename = mp4_file_path;
-    out_filename = "/storage/emulated/0/saveBitmaps_test2";
+    out_filename = "/storage/emulated/0/saveBitmaps_test2"; //Change to your file path.
 
-    // 1
+    //初始化上下文
+    AVFormatContext *fmt_ctx = avformat_alloc_context();
+
+    //打开文件
     ret = avformat_open_input(&fmt_ctx, in_filename, nullptr, nullptr);
     if (ret != 0) {
         LOGE("Could not open source file %s ret:%d\n", in_filename, ret);
         return -1;
     }
-
+    //2、获取音视频流信息
     if (avformat_find_stream_info(fmt_ctx, nullptr) < 0) {
         LOGE("Could not find stream information\n");
         return -1;
     }
 
-    av_dump_format(fmt_ctx, 0, in_filename, 0);
-
     av_init_packet(&avpkt);
     avpkt.data = nullptr;
     avpkt.size = 0;
 
-    // 2
-    stream_index = av_find_best_stream(fmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+    //获取视频流的索引
+    video_stream_index = av_find_best_stream(fmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (ret < 0) {
         LOGE("Could not find %s stream in input file '%s'\n",
              av_get_media_type_string(AVMEDIA_TYPE_VIDEO), in_filename);
         return ret;
     }
+    //获取视频流
+    stream = fmt_ctx->streams[video_stream_index];
 
-    stream = fmt_ctx->streams[stream_index];
-
-    // 3
+    //查找解码器
     codec = avcodec_find_decoder(stream->codecpar->codec_id);
     if (codec == nullptr) {
         return -1;
     }
 
-    // 4
+    //获取解码器context
     codeCtx = avcodec_alloc_context3(nullptr);
     if (!codeCtx) {
         LOGE("Could not allocate video codec context\n");
@@ -168,14 +167,13 @@ int video_to_jpeg::run() {
     }
 
 
-    // 5
     if ((ret = avcodec_parameters_to_context(codeCtx, stream->codecpar)) < 0) {
         LOGE("Failed to copy %s codec parameters to decoder context\n",
              av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
         return ret;
     }
 
-    // 6
+    //打开解码器
     avcodec_open2(codeCtx, codec, nullptr);
 
 
@@ -188,27 +186,15 @@ int video_to_jpeg::run() {
 
     frame_count = 0;
     char buf[1024];
-
+    //开始循环解码
     while (true) {
-        if (av_read_frame(fmt_ctx, &avpkt) >= 0) {
-            if (avpkt.stream_index == stream_index) {
-                // 8
-                int re = avcodec_send_packet(codeCtx, &avpkt);
-                if (re < 0) {
-                    continue;
+        if (av_read_frame(fmt_ctx, &avpkt) >= 0) { // Return the next frame of a stream.
+            if (avpkt.stream_index == video_stream_index) { //标识该AVPacket所属的视频/音频流。
+                avcodec_send_packet(codeCtx, &avpkt); //Supply raw packet data as input to a decoder.
+                while (avcodec_receive_frame(codeCtx, frame) == 0) { //Return decoded output data from a decoder.
+                    snprintf(buf, sizeof(buf), "%s/frame-%d.jpg", out_filename, frame_count);
+                    saveJpg(frame, buf);
                 }
-
-                // 9 这里必须用while()，因为一次avcodec_receive_frame可能无法接收到所有数据
-                while (avcodec_receive_frame(codeCtx, frame) == 0) {
-                    if (frame_count % 25 == 0) { //只要关键帧的图片数据
-                        // 拼接图片路径、名称
-                        int keyFrameIndex = frame_count / 25;
-                        snprintf(buf, sizeof(buf), "%s/Demo-%d.jpg", out_filename, keyFrameIndex);
-                        LOGE("save map index:%d", keyFrameIndex);
-                        saveJpg(frame, buf); //保存为jpg图片
-                    }
-                }
-
                 frame_count++;
             }
             av_packet_unref(&avpkt);

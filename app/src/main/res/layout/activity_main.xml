@@ -12,7 +12,6 @@
         android:id="@+id/tv_cost_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="30dp"
         android:text="FFmpegLearn"
         android:textColor="@color/black" />
 
@@ -65,5 +64,10 @@
         android:id="@+id/btn_hw_decode"
         style="@style/JWButton"
         android:text="硬件加速解码（TODO）" />
+
+    <Button
+        android:id="@+id/btn_yuv_player"
+        style="@style/JWButton"
+        android:text="YUV视频播放器" />
 
 </LinearLayout>

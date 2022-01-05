@@ -1,6 +1,7 @@
 package julis.wang.ffmpeglearn;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
@@ -32,6 +33,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         findViewById(R.id.btn_filtering_video).setOnClickListener(this);
         findViewById(R.id.btn_frame_seek).setOnClickListener(this);
         findViewById(R.id.btn_video_to_jpeg).setOnClickListener(this);
+        findViewById(R.id.btn_yuv_player).setOnClickListener(this);
         tvCost = findViewById(R.id.tv_cost_time);
     }
 
@@ -77,6 +79,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             hardware_decode();
         } else if (vId == R.id.btn_filtering_video) {
             filtering_video();
+        } else if (vId == R.id.btn_yuv_player) {
+            startActivity(new Intent(this, YUVPlayerActivity.class));
         } else if (vId == R.id.btn_frame_seek) {
             for (int i = 0; i < 4; i++) {
                 int finalI = i;
@@ -92,7 +96,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         } else {
             throw new IllegalStateException("Unexpected value: " + vId);
         }
-        costTime();
     }
 
     public static final int THREAD_SIZE = 4;

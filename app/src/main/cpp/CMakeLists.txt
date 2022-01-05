@@ -134,6 +134,8 @@ target_link_libraries(
 
         -landroid
         OpenSLES
+        GLESv2
+        EGL
         -lEGL
         -lGLESv2
         # Links the target library to the log library

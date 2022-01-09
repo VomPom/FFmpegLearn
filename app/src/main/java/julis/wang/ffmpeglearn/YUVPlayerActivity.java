@@ -2,6 +2,8 @@ package julis.wang.ffmpeglearn;
 
 import android.os.Bundle;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 /*******************************************************
  *
  * Created by juliswang on 2022/01/05 22:56 
@@ -11,7 +13,7 @@ import android.os.Bundle;
  *
  *******************************************************/
 
-public class YUVPlayerActivity extends BaseActivity {
+public class YUVPlayerActivity extends AppCompatActivity {
     static {
         System.loadLibrary("native-lib");
     }

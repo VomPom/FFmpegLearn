@@ -31,8 +31,23 @@ public class YuvPlayer extends GLSurfaceView implements Runnable, SurfaceHolder.
     }
 
     @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    public void surfaceCreated(SurfaceHolder holder) {
         new Thread(this).start();
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
+
+    }
+
+    @Override
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+
     }
 
     @Override
@@ -47,7 +62,7 @@ public class YuvPlayer extends GLSurfaceView implements Runnable, SurfaceHolder.
 
     @Override
     public void run() {
-        loadYuv(PATH, getHolder().getSurface());
+        loadYuv("/sdcard/test_yuv.yuv", getHolder().getSurface());
     }
 
     public native void loadYuv(String url, Object surface);

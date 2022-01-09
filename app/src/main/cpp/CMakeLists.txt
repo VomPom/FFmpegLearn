@@ -63,12 +63,12 @@ set_target_properties(avdevice
         PROPERTIES IMPORTED_LOCATION
         ${ffmpeg_lib_dir}/libavdevice.so)
 
-add_library(opencv
-        SHARED
-        IMPORTED)
-set_target_properties(opencv
-        PROPERTIES IMPORTED_LOCATION
-        ${ffmpeg_lib_dir}/libopencv_java4.so)
+#add_library(opencv
+#        SHARED
+#        IMPORTED)
+#set_target_properties(opencv
+#        PROPERTIES IMPORTED_LOCATION
+#        ${ffmpeg_lib_dir}/libopencv_java4.so)
 
 
 #add_library(h264
@@ -119,7 +119,6 @@ target_link_libraries(
 
         # 指定目标库，native-lib 是在上面 add_library 中配置的目标库
         native-lib
-        opencv
 
         # 4. 连接 FFmpeg 相关的库
         avutil
@@ -131,13 +130,15 @@ target_link_libraries(
         avdevice
         #        h264
         #        postproc
-
-        -landroid
-        OpenSLES
+        #        -landroid
         GLESv2
         EGL
-        -lEGL
-        -lGLESv2
+        android
+
+#        opencv
+
+        #        -lEGL
+        #        -lGLESv2
         # Links the target library to the log library
         # included in the NDK.
         ${log-lib})

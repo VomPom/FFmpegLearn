@@ -6,7 +6,7 @@
 
 static const int RET_ERROR = -1;
 static const int RET_SUCCESS = 1;
-using namespace cv;
+//using namespace cv;
 
 static int saveJpg(AVFrame *pFrame, char *out_name) {
     int width = pFrame->width;
@@ -172,11 +172,11 @@ static void decode_frame(AVFrame *src_frame, char *out_name) {
     sws_scale(pSwsCtx, src_frame->data, src_frame->linesize, 0, src_frame->height, dst_RGBA_frame->data,
               dst_RGBA_frame->linesize);
 
-    Mat image = Mat::zeros(src_height, src_width, CV_8UC4);
-    memcpy(image.data, outBuff, dst_frame_size);
-
-    //   写入图片到本地磁盘
-    cv::imwrite(out_name, image);
+//    Mat image = Mat::zeros(src_height, src_width, CV_8UC4);
+//    memcpy(image.data, outBuff, dst_frame_size);
+//
+//    //   写入图片到本地磁盘
+//    cv::imwrite(out_name, image);
 
     // 释放相关内容
     sws_freeContext(pSwsCtx);

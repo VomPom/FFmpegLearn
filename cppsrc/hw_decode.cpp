@@ -8,7 +8,6 @@
 static AVBufferRef *hw_device_ctx = nullptr;
 static enum AVPixelFormat hw_pix_fmt;
 static FILE *output_file = nullptr;
-#define SAVE_H264_PATH "/storage/emulated/0/ffmpegLearn";
 
 static int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type) {
     int err;
@@ -65,7 +64,6 @@ static int decode_write(AVCodecContext *avctx, AVPacket *packet) {
             LOGE("Error while decoding\n");
             goto fail;
         }
-
         if (frame->format == hw_pix_fmt) {
             /* retrieve data from GPU to CPU */
             if ((ret = av_hwframe_transfer_data(sw_frame, frame, 0)) < 0) {
@@ -107,8 +105,8 @@ static int decode_write(AVCodecContext *avctx, AVPacket *packet) {
     }
 }
 
-int hw_decode::run() {
-    const char *savePath = SAVE_H264_PATH;
+int hw_decode::run(const string &mp4_path, string output_dir, string hw_name) {
+    string savePath = output_dir + "hw_decode.h264";
 
     AVFormatContext *input_ctx = nullptr;
     int video_stream, ret;
@@ -119,11 +117,11 @@ int hw_decode::run() {
     enum AVHWDeviceType type;
     int i;
 
-    type = av_hwdevice_find_type_by_name("opencl");
+    type = av_hwdevice_find_type_by_name(hw_name.c_str());
 
     /* open the input file */
-    if (avformat_open_input(&input_ctx, mp4_file_path, nullptr, nullptr) != 0) {
-        LOGE("Cannot open input file '%s'\n", mp4_file_path);
+    if (avformat_open_input(&input_ctx, mp4_path.c_str(), nullptr, nullptr) != 0) {
+        LOGE("Cannot open input file '%s'\n", mp4_path.c_str());
         return -1;
     }
 
@@ -172,7 +170,7 @@ int hw_decode::run() {
     }
 
     /* open the file to dump raw data */
-    output_file = fopen(mp4_file_path, "w+b");
+    output_file = fopen(savePath.c_str(), "w+b");
 
     /* actual decoding and dump the raw data */
     while (ret >= 0) {

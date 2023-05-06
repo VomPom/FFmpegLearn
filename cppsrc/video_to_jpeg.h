@@ -14,14 +14,14 @@ extern "C"
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
-
 }
 
 class video_to_jpeg {
-public:
+private:
+    static int decode_frame(AVFrame *pFrame, char *out_name);
 
-    int saveJpg(AVFrame *pFrame, char *out_name);
-    int run(string mp4_path, string output_dir);
+public:
+    static int run(const string &mp4_path, string output_dir);
 };
 
 

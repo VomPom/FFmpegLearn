@@ -4,15 +4,12 @@
 
 #include "demuxing_decoding.h"
 
-static AVFormatContext *fmt_ctx = nullptr;
+
 static AVCodecContext *video_dec_ctx = nullptr, *audio_dec_ctx;
 static int width, height;
 static enum AVPixelFormat pix_fmt;
 static AVStream *video_stream = nullptr, *audio_stream = nullptr;
-static const char *src_filename = nullptr;
 
-static const char *video_dst_filename = "/storage/emulated/0/video_extract_yuv.yuv";
-static const char *audio_dst_filename = "/storage/emulated/0/video_extract_pcm.pcm";
 static FILE *video_dst_file = nullptr;
 static FILE *audio_dst_file = nullptr;
 
@@ -20,7 +17,6 @@ static uint8_t *video_dst_data[4] = {nullptr};
 static int video_dst_line_size[4];
 static int video_dst_buf_size;
 
-static int video_stream_idx = -1, audio_stream_idx = -1;
 static AVFrame *av_frame = nullptr;
 static AVPacket *pkt = nullptr;
 static int video_frame_count = 0;
@@ -120,8 +116,7 @@ static int open_codec_context(int *stream_idx,
 
     ret = av_find_best_stream(format_context, type, -1, -1, nullptr, 0);
     if (ret < 0) {
-        LOGE("Could not find %s stream in input file '%s'",
-             av_get_media_type_string(type), src_filename);
+        LOGE("Could not find %s stream", av_get_media_type_string(type));
         return ret;
     } else {
         stream_index = ret;
@@ -162,14 +157,24 @@ static int open_codec_context(int *stream_idx,
     return 0;
 }
 
-//把一个音视频文件分解为原始视频流YUV文件和原始音频流PCM文件
-int demuxing_decoding::run() {
-    src_filename = mp4_file_path;
+/**
+ * 把一个音视频文件分解为原始视频流YUV文件和原始音频流PCM文件
+ * @param mp4_path  原始 mp4 文件地址
+ * @param output_dir  存放输出的 pcm 和 yuv 文件的文件夹地址
+ * @return
+ */
+int demuxing_decoding::run(const string &mp4_path, const string &output_dir) {
+    static AVFormatContext *fmt_ctx = nullptr;
+
     int ret = 0;
+    int video_stream_idx = -1;
+    int audio_stream_idx = -1;
+
+    demuxing_decoding::pcm_dst_path = output_dir + "video_extract_pcm.pcm";
 
     /* open input file, and allocate format context */
-    if (avformat_open_input(&fmt_ctx, src_filename, nullptr, nullptr) < 0) {
-        LOGE("Could not open source file %s", mp4_file_path);
+    if (avformat_open_input(&fmt_ctx, mp4_path.c_str(), nullptr, nullptr) < 0) {
+        LOGE("Could not open source file %s", mp4_path.c_str());
         exit(1);
     }
 
@@ -180,21 +185,22 @@ int demuxing_decoding::run() {
     }
 
     if (open_codec_context(&video_stream_idx, &video_dec_ctx, fmt_ctx, AVMEDIA_TYPE_VIDEO) >= 0) {
-        video_stream = fmt_ctx->streams[video_stream_idx];
-
-        video_dst_file = fopen(video_dst_filename, "wb");
-        if (!video_dst_file) {
-            LOGE("Could not open destination file %s", video_dst_filename);
-            ret = 1;
-            goto end;
-        }
-
         /* allocate image where the decoded image will be put */
         width = video_dec_ctx->width;
         height = video_dec_ctx->height;
         pix_fmt = video_dec_ctx->pix_fmt;
-        ret = av_image_alloc(video_dst_data, video_dst_line_size,
-                             width, height, pix_fmt, 1);
+        demuxing_decoding::yuv_dest_path =
+                output_dir + "video_extract_yuv_" + to_string(width) + "x" + to_string(height) + ".yuv";
+        video_stream = fmt_ctx->streams[video_stream_idx];
+
+        video_dst_file = fopen(yuv_dest_path.c_str(), "wb");
+        if (!video_dst_file) {
+            LOGE("Could not open destination file %s", yuv_dest_path.c_str());
+            ret = 1;
+            goto end;
+        }
+
+        ret = av_image_alloc(video_dst_data, video_dst_line_size, width, height, pix_fmt, 1);
         if (ret < 0) {
             LOGE("Could not allocate raw video buffer");
             goto end;
@@ -204,9 +210,9 @@ int demuxing_decoding::run() {
 
     if (open_codec_context(&audio_stream_idx, &audio_dec_ctx, fmt_ctx, AVMEDIA_TYPE_AUDIO) >= 0) {
         audio_stream = fmt_ctx->streams[audio_stream_idx];
-        audio_dst_file = fopen(audio_dst_filename, "wb");
+        audio_dst_file = fopen(pcm_dst_path.c_str(), "wb");
         if (!audio_dst_file) {
-            LOGE("Could not open destination file %s", audio_dst_filename);
+            LOGE("Could not open destination file %s", pcm_dst_path.c_str());
             ret = 1;
             goto end;
         }
@@ -233,9 +239,15 @@ int demuxing_decoding::run() {
     }
 
     if (video_stream)
-    LOGE("Demuxing video from file '%s' into '%s'", src_filename, video_dst_filename);
+        LOGE("Demuxing video from file '%s' into '%s'", mp4_path.c_str(), yuv_dest_path.c_str());
     if (audio_stream)
-    LOGE("Demuxing audio from file '%s' into '%s'", src_filename, audio_dst_filename);
+        LOGE("Demuxing audio from file '%s' into '%s'", mp4_path.c_str(), pcm_dst_path.c_str());
+
+    // av_read_frame、avcodec_send_packet、avcodec_receive_frame 之间的联系
+    // av_read_frame 函数读取一帧数据，然后将数据送入解码器进行解码，
+    // avcodec_send_packet 函数将数据送入解码器进行解码，
+    // avcodec_receive_frame 函数从解码器中获取解码后的数据。
+    // 共同完成了一帧音视频数据的读取、解码和获取的过程。
 
     /* read frames from the file */
     while (av_read_frame(fmt_ctx, pkt) >= 0) {

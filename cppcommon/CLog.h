@@ -1,9 +1,5 @@
 //
-//  CPPLog.h
-//  study
-//
-//  Created by 飞拍科技 on 2018/12/29.
-//  Copyright © 2018 飞拍科技. All rights reserved.
+// Created by juliswang on 2023/5/4.
 //
 
 #ifndef CPPLog_h

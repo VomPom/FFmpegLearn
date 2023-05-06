@@ -1,10 +1,7 @@
 //
-//  CodecUtil.h
-//  2-video_audio_advanced
+// Created by juliswang on 2023/5/4.
 //
-//  Created by apple on 2020/5/30.
-//  Copyright © 2020 apple. All rights reserved.
-//
+
 
 #ifndef CodecUtil_h
 #define CodecUtil_h

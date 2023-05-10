@@ -19,7 +19,7 @@ extern "C"
 
 class YuvConverter {
 public:
-    int yuv2mp4(string yuv_file_path, string des_file_path, int yuv_w, int yuv_h);
+    static int yuv2mp4(string yuv_file_path, string des_file_path, int yuv_w, int yuv_h);
 };
 
 #endif //FFMPEGLEARN_YUV_TO_H264_H

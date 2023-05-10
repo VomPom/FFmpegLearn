@@ -17,23 +17,23 @@ int video_to_jpeg::run(const string &mp4_path, string output_dir) {
     int video_stream_index;
     int ret;
 
-    // 初始化上下文
+    // 1、初始化上下文
     AVFormatContext *fmt_ctx = avformat_alloc_context();
 
-    // 打开文件
+    // 2、打开文件
     ret = avformat_open_input(&fmt_ctx, mp4_path.c_str(), nullptr, nullptr);
     if (ret != 0) {
         LOGE("Could not open source file %s ret:%d\n", mp4_path.c_str(), ret);
         return ret;
     }
 
-    // 获取音视频流信息
+    // 3、获取音视频流信息
     if (avformat_find_stream_info(fmt_ctx, nullptr) < 0) {
         LOGE("Could not find stream information\n");
         return ret;
     }
 
-    //获取视频流的索引
+    // 获取视频流的索引
     video_stream_index = av_find_best_stream(fmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (ret < 0) {
         LOGE("Could not find %s stream in input file '%s'\n",
@@ -41,39 +41,40 @@ int video_to_jpeg::run(const string &mp4_path, string output_dir) {
         return ret;
     }
 
-    //获取视频流
+    // 5、获取视频流
     stream = fmt_ctx->streams[video_stream_index];
 
-    //查找解码器
+    // 6、查找解码器
     pCodec = avcodec_find_decoder(stream->codecpar->codec_id);
     if (pCodec == nullptr) {
         return ret;
     }
 
-    //获取解码器context
+    // 7、获取解码器 context
     pCodeCtx = avcodec_alloc_context3(nullptr);
     if (!pCodeCtx) {
         LOGE("Could not allocate video pCodec context\n");
         return ret;
     }
 
+    // 8、拷贝参数到解码器上下文
     if ((ret = avcodec_parameters_to_context(pCodeCtx, stream->codecpar)) < 0) {
         LOGE("Failed to copy %s pCodec parameters to decoder context\n",
              av_get_media_type_string(AVMEDIA_TYPE_VIDEO));
         return ret;
     }
 
-    //打开解码器
+    // 9、打开解码器
     avcodec_open2(pCodeCtx, pCodec, nullptr);
 
-    //初始化frame，解码后数据
+    // 10、初始化frame，解码后数据
     pFrame = av_frame_alloc();
     pPacket = av_packet_alloc();
 
     frame_count = 0;
     char buf[1024];
 
-    //开始循环解码
+    // 11、开始循环解码
     while (true) {
         ret = av_read_frame(fmt_ctx, pPacket);
         // Return the next pFrame of a stream.
@@ -83,7 +84,7 @@ int video_to_jpeg::run(const string &mp4_path, string output_dir) {
                 avcodec_send_packet(pCodeCtx, pPacket);
                 // Return decoded output data from a decoder.
                 while (avcodec_receive_frame(pCodeCtx, pFrame) == 0) {
-                    snprintf(buf, sizeof(buf), "%s/frame-pts-%lld.jpg", output_dir.c_str(), pFrame->pts);
+                    snprintf(buf, sizeof(buf), "%s/frame-%d.jpg", output_dir.c_str(), frame_count);
                     decode_frame(pFrame, buf);
                     frame_count++;
                 }

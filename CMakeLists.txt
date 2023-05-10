@@ -13,6 +13,7 @@ aux_source_directory(${COMMON_DIR} common)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -fexceptions -frtti")
 message(${SRC_DIR})
+include_directories(${SRC_DIR}/include)
 include_directories(${SRC_DIR})
 include_directories(${COMMON_DIR})
 
@@ -25,8 +26,7 @@ add_executable(
         ${PROJECT_NAME}
         ${cppsrc}
         ${common}
-        example.cpp
-)
+        example.cpp)
 
 target_link_libraries(
         ${PROJECT_NAME}

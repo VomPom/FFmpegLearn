@@ -18,7 +18,7 @@ extern "C"
 
 class hw_decode {
 public:
-    int run(const string &mp4_path, string output_dir, string hw_name);
+    static int run(const string &mp4_path, const string &output_dir, const string &hw_name);
 };
 
 

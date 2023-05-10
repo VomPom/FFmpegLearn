@@ -9,6 +9,8 @@ static AVBufferRef *hw_device_ctx = nullptr;
 static enum AVPixelFormat hw_pix_fmt;
 static FILE *output_file = nullptr;
 
+
+
 static int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type) {
     int err;
 
@@ -73,7 +75,6 @@ static int decode_write(AVCodecContext *avctx, AVPacket *packet) {
             tmp_frame = sw_frame;
         } else
             tmp_frame = frame;
-
         size = av_image_get_buffer_size(static_cast<AVPixelFormat>(tmp_frame->format), tmp_frame->width,
                                         tmp_frame->height, 1);
         buffer = static_cast<uint8_t *>(av_malloc(size));
@@ -105,8 +106,16 @@ static int decode_write(AVCodecContext *avctx, AVPacket *packet) {
     }
 }
 
-int hw_decode::run(const string &mp4_path, string output_dir, string hw_name) {
-    string savePath = output_dir + "hw_decode.h264";
+/**
+ * 实现利用硬件进行解码
+ * 这里测试在 mac 上使用的 videotoolbox 解码出来的 yuv 使用 ffplay 播放，
+ * 颜色有一些不一致，是因为硬解出来的像素格式是 nv12，还需做一次转化
+ * @param mp4_path  目标 mp4 视频
+ * @param output_dir 输出的文件目录
+ * @param hw_name 硬解码的名字
+ * @return
+ */
+int hw_decode::run(const string &mp4_path, const string &output_dir, const string &hw_name) {
 
     AVFormatContext *input_ctx = nullptr;
     int video_stream, ret;
@@ -118,7 +127,10 @@ int hw_decode::run(const string &mp4_path, string output_dir, string hw_name) {
     int i;
 
     type = av_hwdevice_find_type_by_name(hw_name.c_str());
-
+    if (type == AV_HWDEVICE_TYPE_NONE) {
+        LOGE("Cannot find hw_codec: '%s'\n", hw_name.c_str());
+        return -1;
+    }
     /* open the input file */
     if (avformat_open_input(&input_ctx, mp4_path.c_str(), nullptr, nullptr) != 0) {
         LOGE("Cannot open input file '%s'\n", mp4_path.c_str());
@@ -168,6 +180,11 @@ int hw_decode::run(const string &mp4_path, string output_dir, string hw_name) {
         LOGE("Failed to open codec for stream #%u\n", video_stream);
         return -1;
     }
+
+    string savePath = output_dir + "hw_decode_"
+                      + to_string(decoder_ctx->width)
+                      + "x" + to_string(decoder_ctx->height)
+                      + ".yuv";
 
     /* open the file to dump raw data */
     output_file = fopen(savePath.c_str(), "w+b");
